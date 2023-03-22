@@ -8,8 +8,8 @@ namespace Match3
     {
         public float time;
         private Cell pressedCell;
-        private Cell enteredPiece;
-        public void OnPointerEnter(Cell cell) => enteredPiece = cell;
+        private Cell enteredCell;
+        public void OnPointerEnter(Cell cell) => enteredCell = cell;
         public void OnPointerDown(Cell cell) => pressedCell = cell;
 
         private bool IsAdjacent(Cell startCell, Cell endCell) =>
@@ -18,25 +18,34 @@ namespace Match3
 
         public void OnPointerUp()
         {
-            if (IsAdjacent(pressedCell, enteredPiece))
+            if (IsAdjacent(pressedCell, enteredCell))
             {
                 //здесь свап
-                StartCoroutine(Move());
-                Debug.Log("Swap!");
-            }
-            else
-            {
-                Debug.Log("Not Swap!");
+                SwapCell(ref pressedCell, ref enteredCell);
             }
         }
-        public IEnumerator Move()
+
+        public void SwapCell(ref Cell firstCell, ref Cell secondCell)
         {
-            for (float t = 0; t <= time; t += Time.deltaTime)
-            {
-                pressedCell.transform.position = Vector3.Lerp(pressedCell.gameObject.transform.position, enteredPiece.gameObject.transform.position, t / time);
-                enteredPiece.transform.position = Vector3.Lerp(enteredPiece.gameObject.transform.position, pressedCell.gameObject.transform.position, t / time);
-                yield return null;
-            }
+            float cell1X = firstCell.transform.position.x;
+            float cell1Y = firstCell.transform.position.y;
+
+            
+            firstCell.Move(secondCell.transform.position.x, secondCell.transform.position.y, time);
+            secondCell.Move(cell1X, cell1Y, time);
+
+
+            int X = firstCell.X;
+            int Y = firstCell.Y;
+            firstCell.X = secondCell.X;
+            firstCell.Y = secondCell.Y;
+            secondCell.X = X;
+            secondCell.Y = Y;
+
+
+            pressedCell = null;
+            enteredCell = null;
         }
+        
     }
 }
