@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 namespace Match3
 {
@@ -21,6 +22,8 @@ namespace Match3
             set { y = value; }
         }
 
+
+        public typeHero type;
         private IEnumerator moveCoroutine;
 
 
@@ -31,6 +34,31 @@ namespace Match3
         public void OnPointerEnter() => _gameController.OnPointerEnter(this);
         public void OnPointerDown() => _gameController.OnPointerDown(this);
         public void OnPointerUp() => _gameController.OnPointerUp();
+
+
+        /// <param name="DirectionX">0 - in plus and minus, 1 - in minus, 2 - in plus</param>
+        /// <param name="XPos"></param>
+        public int NeighboringSimilarX(out int[] XPos, int DirectionX = 0)
+        {
+            List<int> _XPos = new List<int>();
+            if ((X > 0) && (DirectionX == 1 || DirectionX == 0))
+                if (_gameController.Matrix[X - 1, Y].cell.type == type) _XPos.Add(X - 1);
+            if ((X < _gameController.Len - 1) && (DirectionX == 2 || DirectionX == 0))
+                if (_gameController.Matrix[X + 1, Y].cell.type == type) _XPos.Add(X + 1);
+            XPos = _XPos.ToArray();
+            return _XPos.Count;
+        }
+        public int NeighboringSimilarY(out int[] YPos, int DirectionY = 0)
+        {
+            List<int> _YPos = new List<int>();
+            if ((Y > 0) && (DirectionY == 1 || DirectionY == 0))
+                if (_gameController.Matrix[X, Y - 1].cell.type == type) _YPos.Add(Y - 1);
+            if ((Y < _gameController.Len - 1) && (DirectionY == 2 || DirectionY == 0))
+                if (_gameController.Matrix[X, Y + 1].cell.type == type) _YPos.Add(Y + 1);
+            YPos = _YPos.ToArray();
+            return YPos.Length;
+        }
+
 
         public void Move(float newX, float newY, float time)
         {

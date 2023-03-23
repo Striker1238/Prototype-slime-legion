@@ -413,7 +413,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cellPref: {fileID: 7982835650141021719, guid: 0606e5de2915d3b4eb61a42429f89b95, type: 3}
   perentForPref: {fileID: 1716981526}
-  Len: 5
   SquareArea:
     StartPos: {x: -350, y: 350}
     EndPos: {x: 350, y: -350}
@@ -431,6 +430,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7df97313b24eef54fa45e87c2d8726bb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Len: 5
   time: 0.2
 --- !u!1 &1737240046
 GameObject:
