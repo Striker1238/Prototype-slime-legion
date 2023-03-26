@@ -52,7 +52,7 @@ Packages/
 *.meta
 *.cache
 *.log
-
+TextMesh Pro/
 
 # Unity3D generated meta files
 *.pidb.meta

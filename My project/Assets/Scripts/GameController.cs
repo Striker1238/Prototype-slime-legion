@@ -3,12 +3,19 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using System.Linq;
+using TMPro;
 using System.Threading.Tasks;
+using UnityEngine.UI;
 
 namespace Match3
 {
     public class GameController : MonoBehaviour
     {
+        [System.Serializable]
+        public struct cellSprite
+        {
+            public List<Sprite> _sprite;
+        }
         [System.Serializable]
         public struct cellStruct
         {
@@ -18,20 +25,63 @@ namespace Match3
             public float x_pos;
             public float y_pos;
         }
+        public struct hero
+        {
+            HeroAttack.Swordsman swordsman;
+        }
+
+        [Header("Matrix")]
         public int Len;
+        [Tooltip("Point-to-point move time")]
+        public float MoveTime;
         [SerializeField]
         public cellStruct[,] Matrix;
 
-        public float time;
-        private static FillCell _fillCell;
+        [Header("Hero")]
+        public int MaxLevelHero;
+        public cellSprite[] HeroSprites;
 
+        [Header("Game settings")]
+        [Tooltip("Camera zoom speed")]
+        public int RecedingSpeed;
+        private int countSteps;
+        public int CountSteps
+        {
+            get => countSteps;
+            set 
+            {
+                countSteps = value;
+                countStepsText.text = countSteps.ToString();
+                if(countSteps <= 0) _startMatch3.StartBattle(RecedingSpeed);
+            }
+        }
+        public int CountWaves;
+        //public int EnemyMoveSpeed;
+
+        public bool BattleIsActive = false;
+        [Header("Objects")]
+        public TextMeshProUGUI countStepsText;
+        [HideInInspector]
+        public List<Enemy> AllEnemies = new List<Enemy>();
+        
+
+        private static FillCell _fillCell;
+        private static StartMatch3 _startMatch3;
         private Cell pressedCell;
         private Cell enteredCell;
+        
+
+
+
 
         public void Awake()
         {
             _fillCell = FindObjectOfType<FillCell>();
+            _startMatch3 = FindObjectOfType<StartMatch3>();
         }
+        public void SetSpriteToObject(Vector2 indices) => 
+            Matrix[(int)indices.x, (int)indices.y].cell.gameObject.GetComponentInChildren<SpriteRenderer>().sprite = 
+            HeroSprites[(int)Matrix[(int)indices.x, (int)indices.y].cell.type]._sprite[Matrix[(int)indices.x, (int)indices.y].cell.levelHero-1];
         public void OnPointerEnter(Cell cell) => enteredCell = cell;
         public void OnPointerDown(Cell cell) => pressedCell = cell;
         private bool IsAdjacent(Cell startCell, Cell endCell) =>
@@ -41,12 +91,14 @@ namespace Match3
         {
             if (IsAdjacent(pressedCell, enteredCell))
             {
-                //здесь свап
+                
                 SwapCell(pressedCell, enteredCell);
+                CountSteps--;
+                pressedCell = null;
+                enteredCell = null;
             }
         }
-
-
+        
         public async void SwapCell(Cell firstCell, Cell secondCell)
         {
             float cell1X = firstCell.transform.position.x;
@@ -62,19 +114,14 @@ namespace Match3
             secondCell.thisCellObj = test;
 
 
-            firstCell.Move(secondCell.transform.position.x, secondCell.transform.position.y, time);
-            await secondCell.Move(cell1X, cell1Y, time);
+            firstCell.Move(secondCell.transform.position.x, secondCell.transform.position.y, MoveTime);
+            await secondCell.Move(cell1X, cell1Y, MoveTime);
             var firstLine = LineAssembled(firstCell).Result.ToArray();
             var secondLine = LineAssembled(secondCell).Result.ToArray();
 
             DestroyCellLine(firstLine);
             DestroyCellLine(secondLine);
-
-
-            pressedCell = null;
-            enteredCell = null;
         }
-        
 
         /// <returns>Возвращает Vector3, в котором находятся значения: X - indexX, Y - indexY, Z - количество рядом стоящих идентичных(по типу героя) ячеек</returns>
         public async Task<List<Vector3>> LineAssembled(Cell swapCell)
@@ -88,8 +135,9 @@ namespace Match3
                 List<int> Pos = new List<int>();
                 swapCell.NeighboringSimilarX(out XPos);
                 swapCell.NeighboringSimilarY(out YPos);
-                
-                
+                countAdjecentOnMainCell = XPos.Length + YPos.Length;
+
+
                 Pos.AddRange(XPos);
                 for (int i = 0; i < Pos.Count; i++)
                 {
@@ -113,19 +161,19 @@ namespace Match3
                 
             }
 
-            Line.Add(new Vector3(swapCell.thisCellObj.X, swapCell.thisCellObj.Y, countAdjecentOnMainCell));
+            Line.Add(new Vector3(swapCell.thisCellObj.X, swapCell.thisCellObj.Y, countAdjecentOnMainCell-1));
 
 
             await Task.CompletedTask;
             if (Line.Count > 2)
             {
+                CountSteps += Line.Count-2;
                 return Line;
             }
             else return new List<Vector3>();
         }
         private void DestroyCellLine(Vector3[] Line)
         {
-            //Line.ToList().Sort();
             foreach (var cell in Line)
             {
                 if (cell.z < 1)
@@ -136,16 +184,6 @@ namespace Match3
             }
             _fillCell.Fill(Line);
         }
-
-
-
-
-
-
-
-        public void CheckNewCell(Cell swapCell)
-        {
-            LineAssembled(swapCell);
-        }
+        
     }
 }
