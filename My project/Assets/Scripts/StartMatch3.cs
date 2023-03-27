@@ -22,6 +22,7 @@ namespace Match3
         public square SquareArea;
         public Vector2 CellSize;
         public Vector2 Spacing;
+        public GameObject cellBackground;
 
         [Header("Battle")]
         public Camera mainCamera;
@@ -47,15 +48,21 @@ namespace Match3
                 Vector3[] test = new Vector3[_gameController.Len];
                 for (int column = 0; column < _gameController.Len; column++)
                 {
+                    var background = Instantiate(cellBackground);
                     test[column] = new Vector3(line, column, 0);
                     _gameController.Matrix[line, column] = new GameController.cellStruct
                     { 
                         cell = null,
                         X = line,
                         Y = column,
-                        x_pos = (SquareArea.StartPos.x + (CellSize.x*1.5f + Spacing.x) * line),
-                        y_pos = (SquareArea.StartPos.y - (CellSize.y*1.5f + Spacing.y) * column)
+                        x_pos = (SquareArea.StartPos.x + (CellSize.x) * line),
+                        y_pos = (SquareArea.StartPos.y - (CellSize.y) * column)
                     };
+
+                    background.transform.position = new Vector3(_gameController.Matrix[line, column].x_pos, _gameController.Matrix[line, column].y_pos, 15);
+                    background.transform.localScale = CellSize;
+
+                    background.GetComponent<SpriteRenderer>().color = ((line+column)%2==0)?new Color(0.6431373f, 0.6392157f, 0.1411765f) :new Color(0.5372549f, 0.5921569f, 0.1411765f);
                 }
                 _fillCell.Fill(test);
             }
@@ -83,7 +90,7 @@ namespace Match3
             //спавнить врагов
             for (int i = 0; i < _gameController.CountWaves; i++)
             {
-                Vector3 startPos = new Vector3(Random.Range(-4, 4), 8, 15);
+                Vector3 startPos = new Vector3(Random.Range(-4, 4), 6.5f, 15);
                 var enemy = Instantiate(testObj, startPos, Quaternion.identity);
                 _gameController.AllEnemies.Add(enemy.GetComponent<Enemy>());
                 await Task.Delay(Random.Range(50,300));
